@@ -5,3 +5,6 @@ A 3D game for the HoloGameP platform developed by students and the [Artificial I
 # Credits
 
 Character design by [fluffyloaf254](https://opengameart.org/content/food-themed-character-pack).
+
+# Link za whatsapp grupu
+https://chat.whatsapp.com/GmBh9eLZc5N9OM5GdaHkxu
