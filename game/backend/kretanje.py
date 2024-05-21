@@ -5,20 +5,41 @@ class Movement:
         self.game_board = game_board
 
     def move_figure(self, figure_color, steps):
+        figures_outside_base = []
+        figures_in_base = []
         current = self.game_board.head
+
         while current:
             if current.figureColor == figure_color:
-                new_position = (current.position + steps) % 72 
-                if self.is_valid_move(current.position, new_position):
-                    if self.is_figure_at_position(new_position):
-                        self.return_opponent_figure_to_start(new_position)
-                    current.position = new_position
-                    print(f"Figura se pomakla na poziciju: {current.position}")
-                    return
+                if current.isStart:
+                    figures_in_base.append(current)
                 else:
-                    print("Nepravilni potez!")
-                    return
+                    figures_outside_base.append(current)
             current = current.next
+
+        if steps == 6 and figures_in_base:
+            # Omogući pomicanje figure iz baze na početnu poziciju
+            figure_to_move = figures_in_base[0]  # Nađi prvu figuru u bazi
+            new_position = self.get_starting_position(figure_color)
+            if self.is_valid_move(figure_to_move.position, new_position):
+                figure_to_move.position = new_position
+                figure_to_move.isStart = False
+                print(f"Figure moved from base to start position: {figure_to_move.position}")
+            else:
+                print("Invalid move!")
+        elif figures_outside_base:
+            # Pomakni prvu figuru izvan baze
+            figure_to_move = figures_outside_base[0]
+            new_position = (figure_to_move.position + steps) % 72
+            if self.is_valid_move(figure_to_move.position, new_position):
+                if self.is_figure_at_position(new_position):
+                    self.return_opponent_figure_to_start(new_position)
+                figure_to_move.position = new_position
+                print(f"Figura se pomakla na poziciju: {figure_to_move.position}")
+            else:
+                print("Invalid move!")
+        else:
+            print("No figures to move.")
 
     def is_valid_move(self, current_position, new_position):
         # Provjera položaja
@@ -77,5 +98,18 @@ class Movement:
                 print(f"Protivnicka figura vracena na start: {current.position}")
                 return
             current = current.next
+
+    def get_starting_position(self, figure_color):
+        if figure_color == "zelena":
+            return 0
+        elif figure_color == "zuta":
+            return 14
+        elif figure_color == "crvena":
+            return 32
+        elif figure_color == "plava":
+            return 50
+        else:
+            return -1
+
 game_board = GameBoard()
 movement = Movement(game_board)
