@@ -8,3 +8,5 @@ Character design by [fluffyloaf254](https://opengameart.org/content/food-themed-
 
 # Link za whatsapp grupu
 https://chat.whatsapp.com/GmBh9eLZc5N9OM5GdaHkxu
+
+This work has been supported in part by the Croatian Science Foundation under the project number [IP-2019-04-5824](http://dragon.foi.hr:8888/ohai4games).
