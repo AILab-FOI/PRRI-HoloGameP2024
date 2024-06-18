@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .circle-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #pijun1, #pijun2, #pijun3, #pijun4 {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: white;
+            color: black;
+            font-size: 3vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        #kocka {
+            width: 100%;
+            height: 50%;
+            background-color: white;
+            color: black;
+            font-size: 4vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Define button background colors based on player color */
+        .red { background-color: lightcoral !important;}
+        .green { background-color: lightgreen !important; }
+        .blue { background-color: skyblue !important; }
+        .yellow { background-color: yellow !important; }
+    </style>
+    <script src="../js/jquery-3.1.0.min.js"></script>
+    <script src="../js/hammer.js"></script>
+    <script src="../js/socket.io.min.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            var ws = io();
+            var isConnected = false;
+            var lastEventTime = 0;
+            var debounceInterval = 300; // milliseconds
+            var playerName = ''; // This will be assigned by the server
+            var playerColor = ''; // This will be assigned by the server
+
+            // Handle socket events
+            ws.on('connect', function() {
+                console.log('Connected to server!');
+                isConnected = true;
+                ws.emit('player_joined'); // Notify server that a player has joined
+            });
+
+            ws.on('disconnect', function() {
+                console.log('Disconnected from server!');
+                isConnected = false;
+            });
+
+            ws.on('error', function(msg) {
+                console.log('Socket error:', msg);
+            });
+
+            ws.on('stop', function() {
+                alert('Game finished!');
+                window.location.href = "/start"; // Redirect or handle end of game
+            });
+
+            ws.on('assign_color', function(data) {
+                playerColor = data.color;
+                console.log(`Assigned color: ${playerColor}`);
+                updateButtonColors(playerColor);
+            });
+
+            ws.on('player_disconnected', function(data) {
+                console.log(`Player ${data.name} disconnected, color ${data.color} available again.`);
+                // Handle player disconnection logic if needed
+            });
+
+            ws.on('start_timer', function(data) {
+                startTimer(data.time);
+            });
+
+            function updateButtonColors(playerColor) {
+                $('.cbutton').removeClass('red green blue yellow');
+                switch (playerColor) {
+                    case 'crvena':
+                        $('.cbutton').addClass('red');
+                        break;
+                    case 'zelena':
+                        $('.cbutton').addClass('green');
+                        break;
+                    case 'plava':
+                        $('.cbutton').addClass('blue');
+                        break;
+                    case 'zuta':
+                        $('.cbutton').addClass('yellow');
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            function send(ctrl, context) {
+                var currentTime = new Date().getTime();
+                if (currentTime - lastEventTime < debounceInterval) {
+                    console.log('Ignored duplicate event:', ctrl, context);
+                    return;
+                }
+                lastEventTime = currentTime;
+                if (isConnected) {
+                    console.log(`Sending control command: ${ctrl}, context: ${context}`);
+                    ws.emit('ctrl', {
+                        data: JSON.stringify({
+                            cmd: ctrl,
+                            context: context,
+                            game: "{{game}}",
+                            timestamp: currentTime,
+                            playerName: playerName,
+                            playerColor: playerColor
+                        })
+                    });
+                } else {
+                    console.log('Not connected to server, cannot send control command.');
+                }
+            }
+
+            function startTimer(seconds) {
+                var timerInterval = setInterval(function() {
+                    if (seconds > 0) {
+                        console.log(`Game starts in ${seconds} seconds`);
+                        seconds--;
+                    } else {
+                        clearInterval(timerInterval);
+                        console.log('Game started!');
+                        window.location.reload();  // Force reload to switch to /game
+                    }
+                }, 1000);
+            }
+
+            $('.cbutton').off('mouseup click touchend touchcancel').on('mouseup click touchend touchcancel', function(event) {
+                event.preventDefault();
+                send($(this).attr('alt'), 'stop');
+                console.log('Button', $(this).attr('alt'), 'stop');
+            });
+
+            // Hammer.js gesture detection for touch gestures
+            var buttons = ['#pijun1', '#pijun2', '#pijun3', '#pijun4', '#kocka'];
+            buttons.forEach(function(id) {
+                var hammer = new Hammer(document.getElementById(id));
+                hammer.off('tap press').on('tap press', function(event) {
+                    send(id.toUpperCase().replace('#', ''), 'stop');
+                    console.log('Hammer event:', event.type, 'for', id);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="column">
+        <h1>Odaberi pijun</h1>
+        <div class="circle-buttons">
+            <button id="pijun1" class="cbutton" alt="PIJUN1">1</button>
+            <button id="pijun2" class="cbutton" alt="PIJUN2">2</button>
+            <button id="pijun3" class="cbutton" alt="PIJUN3">3</button>
+            <button id="pijun4" class="cbutton" alt="PIJUN4">4</button>
+        </div>
+    </div>
+    <div class="column">
+        <button id="kocka" class="cbutton" alt="KOCKA">Baci kocku</button>
+    </div>
+</div>
+</body>
+</html>

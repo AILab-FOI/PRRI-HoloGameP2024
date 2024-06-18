@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Steampunk Game Lobby</title>
+    <style>
+        body {
+            background-color: #2f2f2f;
+            color: #d4af37;
+            font-family: 'Courier New', Courier, monospace;
+            background-image: url('../static/images/steampunk_backgrund.jpg');
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        #lobby {
+            width: 80%;
+            margin: 0 auto;
+            background: rgba(47, 47, 47, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px #000000;
+        }
+        .player {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .player button {
+            background-color: #d4af37;
+            border: none;
+            color: #2f2f2f;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #name_input {
+            width: 80%;
+            margin: 20px auto;
+            text-align: center;
+            padding: 20px;
+            background: rgba(47, 47, 47, 0.8);
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px #000000;
+        }
+        #name_input input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #d4af37;
+            margin-right: 10px;
+        }
+        #name_input button {
+            background-color: #d4af37;
+            border: none;
+            color: #2f2f2f;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #countdown {
+            text-align: center;
+            font-size: 2em;
+            margin-top: 20px;
+            color: #ff0000;
+        }
+    </style>
+    <script src="../static/js/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Steampunk Game Lobby</h1>
+    <div id="lobby">
+        <!-- Players will be displayed here -->
+    </div>
+    <div id="name_input">
+        <input type="text" id="player_name" placeholder="Enter your name">
+        <button onclick="setName()">Submit</button>
+    </div>
+    <div id="countdown" style="display: none;">Starting in: <span id="countdown_timer">10</span> seconds</div>
+    <script>
+        var socket = io();
+        var playerName = "";
+        var playerId = "";
+
+        socket.on('connect', function() {
+            playerId = socket.id;
+        });
+
+        socket.on('update_lobby', function(players) {
+            var lobbyDiv = document.getElementById('lobby');
+            lobbyDiv.innerHTML = '';
+            for (var id in players) {
+                var player = players[id];
+                var colorText = player.color ? ' (' + player.color + ')' : '';
+                var readyButton = (player.name && !player.ready && id === playerId) ? '<button onclick="setReady()">Ready</button>' : (player.ready ? 'Ready' : '');
+                lobbyDiv.innerHTML += '<div class="player">' + player.name + colorText + ' ' + readyButton + '</div>';
+            }
+        });
+
+        socket.on('countdown', function(data) {
+            document.getElementById('countdown').style.display = 'block';
+            document.getElementById('countdown_timer').innerText = data.seconds;
+        });
+
+        socket.on('start_game', function() {
+        window.location.href = '/game';
+    });
+
+        function setName() {
+            var nameInput = document.getElementById('player_name');
+            playerName = nameInput.value;
+            socket.emit('set_name', {name: playerName});
+            var divNameInput = document.getElementById('name_input');
+            divNameInput.style.visibility = "hidden";
+        }
+
+        function setReady() {
+            socket.emit('set_ready');
+        }
+    </script>
+</body>
+</html>
