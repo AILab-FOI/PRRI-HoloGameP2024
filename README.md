@@ -22,3 +22,7 @@ This work has been supported in part by the Croatian Science Foundation under th
 - otvoriti drugi `cmd` s administratorskim ovlastima
 - pokrenuti `covjece.exe` koji se nalazi u odgovarajućoj mapi iz naredbenog retka kako bi pratili log
 - kako bi osigurali maksimalnu točnost simulacije kontrolera preporuča se igru imati otvorenu na jednom monitoru, a kontorlere i logove na drugom
+
+# Linkovi na dokumente
+- [GDD](https://github.com/AILab-FOI/PRRI-HoloGameP2024/wiki/Game-Design-Document)
+- [Projektni plan](https://github.com/AILab-FOI/PRRI-HoloGameP2024/wiki/Projektni-plan)
